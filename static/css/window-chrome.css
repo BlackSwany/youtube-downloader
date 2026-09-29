@@ -1,0 +1,122 @@
+/**
+ * Frameless pencere için özel başlık çubuğu.
+ * OS çerçevesinin yerine geçer; yalnızca bu şerit sürüklenir.
+ */
+html.desktop-chrome,
+html.desktop-chrome body {
+  height: 100%;
+  overflow: hidden;
+}
+
+.app-titlebar {
+  --titlebar-h: 38px;
+  z-index: 80;
+  display: flex;
+  align-items: stretch;
+  height: var(--titlebar-h);
+  flex-shrink: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 70%),
+    #0a101c;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.titlebar-drag {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  padding: 0 12px;
+  cursor: grab;
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+.titlebar-drag:active {
+  cursor: grabbing;
+}
+
+.titlebar-mark {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: #22d3ee;
+  color: #06080f;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.28), 0 6px 16px rgba(34, 211, 238, 0.18);
+}
+
+.titlebar-name {
+  overflow: hidden;
+  color: #e8eef8;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.titlebar-controls {
+  display: flex;
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
+.titlebar-btn {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: var(--titlebar-h);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #9aabc7;
+  cursor: pointer;
+  transition: background-color 0.16s ease, color 0.16s ease;
+}
+
+.titlebar-btn svg {
+  display: block;
+  width: 12px;
+  height: 12px;
+}
+
+.titlebar-btn:hover {
+  background: rgba(34, 211, 238, 0.12);
+  color: #e8eef8;
+}
+
+.titlebar-btn:active {
+  background: rgba(34, 211, 238, 0.2);
+}
+
+.titlebar-btn.is-close:hover {
+  background: #e11d48;
+  color: #fff;
+}
+
+.titlebar-btn.is-close:active {
+  background: #be123c;
+}
+
+.titlebar-btn .titlebar-restore {
+  display: none;
+}
+
+.app-titlebar.is-maximized .titlebar-btn .titlebar-maximize {
+  display: none;
+}
+
+.app-titlebar.is-maximized .titlebar-btn .titlebar-restore {
+  display: block;
+}

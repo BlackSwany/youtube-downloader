@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <title>Atamation Media Downloader</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            studio: {
+              950: "#06080f",
+              900: "#0b1020",
+              850: "#121a2e",
+              800: "#1a2438",
+              700: "#2a3650",
+              600: "#3d4d6b",
+              500: "#6b7c9c",
+              400: "#9aabc7",
+              300: "#e8eef8",
+            },
+            gold: "#22d3ee",
+            ember: "#f97316",
+            mark: "#818cf8",
+            inpoint: "#2dd4bf",
+          },
+          fontFamily: {
+            display: ["Inter", "system-ui", "sans-serif"],
+            sans: ["Inter", "system-ui", "sans-serif"],
+            mono: ["IBM Plex Mono", "ui-monospace", "monospace"],
+          },
+          boxShadow: {
+            panel: "0 0 0 1px rgba(255,255,255,0.06), 0 24px 60px rgba(0,0,0,0.45)",
+            glow: "0 0 0 1px rgba(34,211,238,0.25), 0 8px 28px rgba(34,211,238,0.12)",
+          },
+          borderRadius: {
+            panel: "14px",
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    html, body {
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(34, 211, 238, 0.12), transparent 55%),
+        radial-gradient(900px 500px at 90% 0%, rgba(249, 115, 22, 0.10), transparent 50%),
+        #06080f;
+    }
+    .film-edge {
+      background-image: repeating-linear-gradient(
+        to bottom,
+        #06080f 0 10px,
+        #22d3ee 10px 14px,
+        #06080f 14px 28px
+      );
+    }
+    #yt-host, #yt-host iframe { width: 100%; height: 100%; }
+    #yt-host iframe { border: 0; }
+    .checker {
+      background-image:
+        linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px),
+        linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px);
+      background-size: 48px 28px;
+    }
+    .timeline-strip {
+      background-size: auto 100%;
+      background-repeat: repeat-x;
+      background-position: center left;
+      filter: saturate(0.65) brightness(0.55);
+    }
+    .range-track {
+      touch-action: none;
+      user-select: none;
+    }
+    .handle {
+      width: 14px;
+      margin-left: -7px;
+      cursor: ew-resize;
+    }
+    .handle::after {
+      content: "";
+      position: absolute;
+      top: 8px;
+      bottom: 8px;
+      left: 50%;
+      width: 2px;
+      transform: translateX(-50%);
+      background: currentColor;
+      border-radius: 2px;
+      opacity: 0.9;
+    }
+    .playhead {
+      width: 2px;
+      margin-left: -1px;
+      pointer-events: none;
+    }
+    .tick {
+      position: absolute;
+      top: 0;
+      width: 1px;
+      background: rgba(255,255,255,0.16);
+    }
+    .spinner {
+      width: 22px;
+      height: 22px;
+      border: 2px solid rgba(255,255,255,0.15);
+      border-top-color: #22d3ee;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    input[type="time"]::-webkit-calendar-picker-indicator { display: none; }
+    select, button, input { outline: none; }
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-thumb { background: #3d4d6b; border-radius: 99px; }
+    ::-webkit-scrollbar-track { background: #0b1020; }
+
+    .ui-panel {
+      border-radius: 14px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .ui-input {
+      border-radius: 12px;
+      transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .ui-input:hover {
+      border-color: rgba(34, 211, 238, 0.45);
+      background-color: rgba(18, 26, 46, 0.9);
+    }
+    .ui-input:focus {
+      border-color: rgba(34, 211, 238, 0.8);
+      box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
+    }
+    .ui-btn {
+      border-radius: 12px;
+      transition: transform 0.15s ease, filter 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .ui-btn:hover:not(:disabled) {
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+    }
+    .ui-btn:active:not(:disabled) {
+      transform: translateY(0) scale(0.98);
+      filter: brightness(0.96);
+    }
+    .ui-btn-ghost:hover:not(:disabled) {
+      background-color: rgba(34, 211, 238, 0.1);
+      border-color: rgba(34, 211, 238, 0.55);
+    }
+    .ui-btn-ember:hover:not(:disabled) {
+      box-shadow: 0 10px 28px rgba(249, 115, 22, 0.28);
+    }
+    .ui-btn-gold:hover:not(:disabled) {
+      box-shadow: 0 10px 28px rgba(34, 211, 238, 0.25);
+    }
+    select.ui-input {
+      cursor: pointer;
+    }
+  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/window-chrome.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/runner-game.css') }}" />
+</head>
+<body class="font-sans text-studio-300 antialiased h-screen overflow-hidden flex flex-col">
+  <header id="app-titlebar" class="app-titlebar" role="banner">
+    <div class="titlebar-drag pywebview-drag-region">
+      <span class="titlebar-mark" aria-hidden="true">A</span>
+      <span class="titlebar-name">Atamation Media Downloader</span>
+    </div>
+    <div class="titlebar-controls">
+      <button id="titlebar-minimize" class="titlebar-btn" type="button" aria-label="Simge durumuna küçült">
+        <svg viewBox="0 0 12 12" fill="none" aria-hidden="true">
+          <path d="M2 6h8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" />
+        </svg>
+      </button>
+      <button id="titlebar-maximize" class="titlebar-btn" type="button" aria-label="Tam ekran">
+        <svg class="titlebar-maximize" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+          <rect x="2" y="2" width="8" height="8" rx="0.6" stroke="currentColor" stroke-width="1.2" />
+        </svg>
+        <svg class="titlebar-restore" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+          <rect x="3.4" y="1.8" width="6.6" height="6.6" rx="0.5" stroke="currentColor" stroke-width="1.2" />
+          <rect x="1.8" y="3.6" width="6.6" height="6.6" rx="0.5" fill="#0a101c" stroke="currentColor" stroke-width="1.2" />
+        </svg>
+      </button>
+      <button id="titlebar-close" class="titlebar-btn is-close" type="button" aria-label="Kapat">
+        <svg viewBox="0 0 12 12" fill="none" aria-hidden="true">
+          <path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" />
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="flex-1 min-h-0 overflow-y-auto">
+  <div class="min-h-full flex">
+    <aside class="film-edge w-3 shrink-0 hidden sm:block" aria-hidden="true"></aside>
+
+    <div class="flex-1 flex flex-col">
+      <header class="border-b border-white/5 bg-studio-900/80 backdrop-blur-xl px-5 lg:px-8 py-4 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3.5">
+          <div class="h-11 w-11 rounded-xl bg-gold text-studio-950 grid place-items-center font-display text-lg font-bold tracking-tight shadow-glow">A</div>
+          <div>
+            <p class="font-display text-lg leading-none tracking-[0.08em] text-studio-300 font-semibold">Atamation</p>
+            <p class="text-[10px] tracking-[0.22em] uppercase text-studio-500 mt-1.5">Media Downloader</p>
+          </div>
+        </div>
+        <div class="hidden md:flex items-center gap-4 text-[11px] font-mono text-studio-500">
+          <span class="inline-flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-gold"></span>PREVIEW</span>
+          <span class="inline-flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-inpoint"></span>IN / OUT</span>
+          <span class="inline-flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-ember"></span>EXPORT</span>
+        </div>
+      </header>
+
+      <main class="flex-1 px-4 sm:px-6 lg:px-8 py-8 max-w-6xl w-full mx-auto space-y-6">
+        <section class="ui-panel bg-studio-900/90 shadow-panel border border-white/5 p-5 sm:p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h1 class="font-display text-lg tracking-[0.12em] uppercase text-studio-300 font-semibold">01 · Source</h1>
+            <span class="text-[10px] font-mono uppercase tracking-widest text-studio-500">Analyze URL</span>
+          </div>
+          <form id="analyze-form" class="flex flex-col sm:flex-row gap-3">
+            <label class="sr-only" for="url-input">Media URL</label>
+            <input
+              id="url-input"
+              name="url"
+              type="url"
+              required
+              placeholder="Paste a link — YouTube, TikTok, Instagram, X, Facebook, Vimeo…"
+              class="ui-input flex-1 min-w-0 bg-studio-950 border border-studio-700 text-studio-300 placeholder:text-studio-500 px-4 py-3.5 font-mono text-sm"
+            />
+            <button
+              id="analyze-btn"
+              type="submit"
+              class="ui-btn ui-btn-gold inline-flex items-center justify-center gap-2 bg-gold text-studio-950 font-display tracking-[0.14em] uppercase text-sm font-bold px-6 py-3.5 disabled:opacity-50 disabled:cursor-not-allowed min-w-[150px] shrink-0"
+            >
+              <span id="analyze-label">Analyze</span>
+              <span id="analyze-spinner" class="spinner hidden"></span>
+            </button>
+          </form>
+          <p id="error-banner" class="hidden mt-4 text-sm bg-ember/10 border border-ember/40 text-ember px-4 py-3 rounded-xl"></p>
+        </section>
+
+        <section id="editor" class="hidden space-y-6">
+          <div class="grid lg:grid-cols-[minmax(340px,1.15fr)_minmax(260px,0.85fr)] gap-6">
+            <article class="ui-panel bg-studio-900/90 shadow-panel border border-white/5 overflow-hidden">
+              <div id="preview-stage" class="aspect-video bg-studio-950 relative checker">
+                <img id="thumb" alt="Video thumbnail" class="absolute inset-0 w-full h-full object-cover" />
+                <div id="yt-host" class="absolute inset-0"></div>
+                <div id="preview-fallback" class="hidden absolute inset-0 flex flex-col items-center justify-center gap-2 bg-studio-950/80 px-4 text-center">
+                  <p class="font-mono text-[10px] tracking-[0.2em] uppercase text-gold">Preview unavailable</p>
+                  <p id="preview-fallback-copy" class="text-sm text-studio-400">Live scrub works on YouTube only. Timeline trimming still works.</p>
+                </div>
+                <div id="preview-badge" class="absolute top-3 left-3 z-10 font-mono text-[10px] tracking-[0.2em] uppercase bg-black/60 text-gold px-2.5 py-1 rounded-lg">Live preview</div>
+                <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 pointer-events-none">
+                  <p id="uploader" class="font-mono text-[10px] uppercase tracking-widest text-gold"></p>
+                </div>
+              </div>
+              <div id="preview-controls" class="flex flex-wrap gap-2 p-4 border-t border-white/5 bg-studio-950/80">
+                <button id="preview-in" type="button" class="ui-btn ui-btn-ghost px-3.5 py-2 text-[11px] font-mono uppercase tracking-wider border border-inpoint/40 text-inpoint">Preview IN</button>
+                <button id="preview-out" type="button" class="ui-btn ui-btn-ghost px-3.5 py-2 text-[11px] font-mono uppercase tracking-wider border border-mark/40 text-mark">Preview OUT</button>
+                <button id="preview-play" type="button" class="ui-btn ui-btn-ghost px-3.5 py-2 text-[11px] font-mono uppercase tracking-wider border border-gold/40 text-gold">Play range</button>
+              </div>
+            </article>
+
+            <article class="ui-panel bg-studio-900/90 shadow-panel border border-white/5 p-5 sm:p-6 flex flex-col justify-between">
+              <div>
+                    <p class="text-[10px] font-mono uppercase tracking-[0.24em] text-studio-500 mb-2">Program Monitor · <span id="platform-label" class="text-gold">—</span></p>
+                <h2 id="title" class="font-display text-2xl sm:text-3xl text-studio-300 leading-tight font-semibold"></h2>
+                <p class="mt-3 font-mono text-sm text-studio-400">
+                  Duration <span id="full-duration" class="text-gold"></span>
+                </p>
+                <p id="timeline-notice" class="hidden mt-4 text-sm text-studio-400 bg-studio-950/80 border border-gold/25 rounded-xl px-4 py-3">
+                  Duration could not be read. Timeline is closed — the full file will be downloaded.
+                </p>
+              </div>
+
+              <div class="mt-6 grid sm:grid-cols-2 gap-3">
+                <label class="block">
+                  <span class="block text-[10px] font-mono uppercase tracking-widest text-studio-500 mb-2">Container</span>
+                  <select id="media-type" class="ui-input w-full bg-studio-950 border border-studio-700 text-studio-300 px-3 py-2.5 text-sm">
+                    <option value="mp4">MP4 Video</option>
+                    <option value="mp3">MP3 Audio</option>
+                  </select>
+                </label>
+                <label class="block" id="quality-wrap">
+                  <span class="block text-[10px] font-mono uppercase tracking-widest text-studio-500 mb-2">Quality</span>
+                  <select id="quality" class="ui-input w-full bg-studio-950 border border-studio-700 text-studio-300 px-3 py-2.5 text-sm"></select>
+                </label>
+              </div>
+            </article>
+          </div>
+
+          <section id="timeline-section" class="ui-panel bg-studio-900/90 shadow-panel border border-white/5 p-5 sm:p-6">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+              <h3 class="font-display text-lg tracking-[0.12em] uppercase text-studio-300 font-semibold">02 · Timeline</h3>
+              <div class="flex items-center gap-4 font-mono text-xs">
+                <span class="text-inpoint">IN <strong id="in-display" class="text-studio-300 ml-1">00:00</strong></span>
+                <span class="text-mark">OUT <strong id="out-display" class="text-studio-300 ml-1">00:00</strong></span>
+                <span class="text-gold">DUR <strong id="clip-display" class="text-studio-300 ml-1">00:00</strong></span>
+              </div>
+            </div>
+
+            <div class="grid sm:grid-cols-2 gap-3 mb-5">
+              <label class="ui-input flex items-center gap-3 bg-studio-950 border border-studio-700 px-3.5 py-2.5">
+                <span class="text-[10px] font-mono text-inpoint tracking-widest">IN</span>
+                <input id="start-input" type="text" inputmode="numeric" placeholder="00:00" class="flex-1 bg-transparent font-mono text-sm text-studio-300" />
+              </label>
+              <label class="ui-input flex items-center gap-3 bg-studio-950 border border-studio-700 px-3.5 py-2.5">
+                <span class="text-[10px] font-mono text-mark tracking-widest">OUT</span>
+                <input id="end-input" type="text" inputmode="numeric" placeholder="00:00" class="flex-1 bg-transparent font-mono text-sm text-studio-300" />
+              </label>
+            </div>
+
+            <div id="ruler" class="relative h-5 mb-1 font-mono text-[10px] text-studio-500"></div>
+
+            <div id="timeline" class="range-track relative h-20 bg-studio-950 border border-studio-700 rounded-xl overflow-hidden cursor-pointer">
+              <div id="filmstrip" class="timeline-strip absolute inset-0 opacity-70"></div>
+              <div class="absolute inset-0 checker pointer-events-none mix-blend-overlay"></div>
+              <div id="ticks" class="absolute inset-0 pointer-events-none"></div>
+              <div id="selection" class="absolute top-0 bottom-0 bg-mark/25 border-x-2 border-mark"></div>
+              <div id="handle-start" class="handle absolute top-0 bottom-0 bg-inpoint text-inpoint z-20"></div>
+              <div id="handle-end" class="handle absolute top-0 bottom-0 bg-mark text-mark z-20"></div>
+              <div id="playhead" class="playhead absolute top-0 bottom-0 bg-ember z-10"></div>
+            </div>
+
+            <p class="mt-4 text-[11px] text-studio-500">Drag the teal IN and violet OUT handles. Leave the full span selected to export the entire video.</p>
+          </section>
+
+          <section class="ui-panel bg-studio-900/90 shadow-panel border border-white/5 p-5 sm:p-6 flex flex-col gap-5">
+            <div class="flex flex-col gap-5">
+              <div>
+                <h3 class="font-display text-lg tracking-[0.12em] uppercase text-studio-300 font-semibold">03 · Export</h3>
+                <p id="export-hint" class="text-sm text-studio-400 mt-1.5">Ready to render the selected range.</p>
+              </div>
+
+              <label class="block">
+                <span class="block text-[10px] font-mono uppercase tracking-widest text-studio-500 mb-2">Save folder</span>
+                <div class="flex flex-col sm:flex-row gap-2.5">
+                  <input
+                    id="save-dir"
+                    type="text"
+                    readonly
+                    class="ui-input flex-1 min-w-0 bg-studio-950 border border-studio-700 text-studio-300 px-3.5 py-2.5 font-mono text-xs"
+                  />
+                  <button
+                    id="browse-dir"
+                    type="button"
+                    class="ui-btn ui-btn-ghost px-4 py-2.5 text-[11px] font-mono uppercase tracking-wider border border-gold/40 text-gold shrink-0"
+                  >
+                    Klasör Seç
+                  </button>
+                </div>
+              </label>
+
+              <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <p id="download-status" class="text-sm text-studio-400 min-h-[1.25rem]"></p>
+                <button
+                  id="download-btn"
+                  type="button"
+                  class="ui-btn ui-btn-ember inline-flex items-center justify-center gap-2 bg-ember text-white font-display tracking-[0.14em] uppercase text-sm font-bold px-8 py-3.5 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto sm:self-start"
+                >
+                  <span id="download-label">Download Selected Range</span>
+                  <span id="download-spinner" class="spinner hidden" style="border-top-color:#fff"></span>
+                </button>
+              </div>
+            </div>
+          </section>
+        </section>
+      </main>
+      <footer class="border-t border-white/5 px-5 lg:px-8 py-4 text-[11px] font-mono uppercase tracking-[0.16em] text-studio-500 flex justify-between">
+        <span>© 2026 Atamation. Tüm hakları saklıdır.</span>
+        <span>Media Downloader · Range Studio</span>
+      </footer>
+    </div>
+  </div>
+  </div>
+
+  <div id="process-overlay" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm grid place-items-center px-6">
+    <div class="ui-panel bg-studio-900 border border-white/10 shadow-panel max-w-md w-full p-7 text-center">
+      <p id="process-percent" class="font-display text-5xl tracking-wide text-gold tabular-nums font-semibold">0%</p>
+      <div class="mt-5 h-1.5 bg-studio-700 overflow-hidden rounded-full">
+        <div id="process-bar" class="h-full bg-gold transition-all duration-300" style="width: 0%"></div>
+      </div>
+      <p id="process-title" class="font-display tracking-[0.2em] uppercase text-studio-300 mt-5">İşleniyor</p>
+      <p id="process-copy" class="text-sm text-studio-400 mt-2">İndirme başlatılıyor…</p>
+    </div>
+  </div>
+
+  <div id="runner-overlay" class="hidden" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="runner-title">
+    <div class="runner-shell">
+      <div class="runner-toolbar">
+        <div>
+          <p class="runner-kicker">Hidden channel</p>
+          <h2 id="runner-title">Timeline Runner</h2>
+        </div>
+        <button id="runner-close" class="runner-close" type="button" aria-label="Oyunu kapat">
+          <svg viewBox="0 0 12 12" width="12" height="12" fill="none" aria-hidden="true">
+            <path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+      <div class="runner-stage">
+        <canvas id="runner-canvas" width="880" height="260" aria-label="Timeline Runner oyunu"></canvas>
+      </div>
+      <p class="runner-hint">↑ zıpla · ESC veya × ile ana ekrana dön</p>
+    </div>
+  </div>
+
+  <div id="result-modal" class="hidden fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm grid place-items-center px-6">
+    <div class="ui-panel bg-studio-900 border border-white/10 shadow-panel max-w-lg w-full p-7">
+      <p id="result-title" class="font-display text-xl tracking-[0.08em] uppercase text-studio-300 font-semibold"></p>
+      <p id="result-body" class="text-sm text-studio-400 mt-3 break-all whitespace-pre-wrap leading-relaxed"></p>
+      <button
+        id="result-ok"
+        type="button"
+        class="ui-btn ui-btn-gold mt-6 w-full bg-gold text-studio-950 font-display tracking-[0.14em] uppercase text-sm font-bold px-6 py-3.5"
+      >
+        Tamam
+      </button>
+    </div>
+  </div>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script>
+    /**
+     * Saniyeyi MM:SS veya HH:MM:SS zaman koduna çevirir.
+     * @param {number} seconds
+     * @returns {string}
+     */
+    function formatTimecode(seconds) {
+      const total = Math.max(0, Math.floor(Number(seconds) || 0));
+      const h = Math.floor(total / 3600);
+      const m = Math.floor((total % 3600) / 60);
+      const s = total % 60;
+      if (h > 0) {
+        return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+      }
+      return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    }
+
+    /**
+     * MM:SS / HH:MM:SS metnini saniyeye çevirir.
+     * @param {string} value
+     * @returns {number|null}
+     */
+    function parseTimecode(value) {
+      const raw = String(value || "").trim();
+      if (!raw) return null;
+      const parts = raw.split(":").map((part) => Number(part));
+      if (parts.some((n) => Number.isNaN(n))) return null;
+      if (parts.length === 1) return parts[0];
+      if (parts.length === 2) return parts[0] * 60 + parts[1];
+      if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+      return null;
+    }
+
+    /**
+     * Content-Disposition başlığından dosya adını okur.
+     * @param {string|null} header
+     * @returns {string}
+     */
+    function filenameFromDisposition(header) {
+      if (!header) return "clip";
+      const utf = header.match(/filename\*=UTF-8''([^;]+)/i);
+      if (utf) return decodeURIComponent(utf[1]);
+      const ascii = header.match(/filename="?([^"]+)"?/i);
+      return ascii ? ascii[1] : "clip";
+    }
+
+    const state = {
+      url: "",
+      title: "",
+      duration: 0,
+      start: 0,
+      end: 0,
+      thumbnail: "",
+      videoId: "",
+      platform: "",
+      previewSupported: false,
+      timelineEnabled: true,
+      dragging: null,
+      previewTime: 0,
+      rangePlaying: false,
+    };
+
+    let ytPlayer = null;
+    let seekTimer = null;
+    let rangeTimer = null;
+    window.onYouTubeIframeAPIReady = function onYouTubeIframeAPIReady() {
+      if (state.previewSupported && state.videoId) loadPreviewPlayer(state.videoId);
+    };
+
+    const els = {
+      form: document.getElementById("analyze-form"),
+      url: document.getElementById("url-input"),
+      analyzeBtn: document.getElementById("analyze-btn"),
+      analyzeLabel: document.getElementById("analyze-label"),
+      analyzeSpinner: document.getElementById("analyze-spinner"),
+      error: document.getElementById("error-banner"),
+      editor: document.getElementById("editor"),
+      thumb: document.getElementById("thumb"),
+      title: document.getElementById("title"),
+      uploader: document.getElementById("uploader"),
+      fullDuration: document.getElementById("full-duration"),
+      mediaType: document.getElementById("media-type"),
+      quality: document.getElementById("quality"),
+      qualityWrap: document.getElementById("quality-wrap"),
+      inDisplay: document.getElementById("in-display"),
+      outDisplay: document.getElementById("out-display"),
+      clipDisplay: document.getElementById("clip-display"),
+      startInput: document.getElementById("start-input"),
+      endInput: document.getElementById("end-input"),
+      timeline: document.getElementById("timeline"),
+      filmstrip: document.getElementById("filmstrip"),
+      ticks: document.getElementById("ticks"),
+      ruler: document.getElementById("ruler"),
+      selection: document.getElementById("selection"),
+      handleStart: document.getElementById("handle-start"),
+      handleEnd: document.getElementById("handle-end"),
+      playhead: document.getElementById("playhead"),
+      downloadBtn: document.getElementById("download-btn"),
+      downloadLabel: document.getElementById("download-label"),
+      downloadSpinner: document.getElementById("download-spinner"),
+      downloadStatus: document.getElementById("download-status"),
+      saveDir: document.getElementById("save-dir"),
+      browseDir: document.getElementById("browse-dir"),
+      overlay: document.getElementById("process-overlay"),
+      processCopy: document.getElementById("process-copy"),
+      processPercent: document.getElementById("process-percent"),
+      processBar: document.getElementById("process-bar"),
+      processTitle: document.getElementById("process-title"),
+      resultModal: document.getElementById("result-modal"),
+      resultTitle: document.getElementById("result-title"),
+      resultBody: document.getElementById("result-body"),
+      resultOk: document.getElementById("result-ok"),
+      exportHint: document.getElementById("export-hint"),
+      previewIn: document.getElementById("preview-in"),
+      previewOut: document.getElementById("preview-out"),
+      previewPlay: document.getElementById("preview-play"),
+      previewControls: document.getElementById("preview-controls"),
+      previewBadge: document.getElementById("preview-badge"),
+      previewFallback: document.getElementById("preview-fallback"),
+      previewFallbackCopy: document.getElementById("preview-fallback-copy"),
+      previewStage: document.getElementById("preview-stage"),
+      platformLabel: document.getElementById("platform-label"),
+      timelineSection: document.getElementById("timeline-section"),
+      timelineNotice: document.getElementById("timeline-notice"),
+      ytHost: document.getElementById("yt-host"),
+    };
+
+    /**
+     * Kullanıcıya görünür hata bandını günceller.
+     * @param {string} message
+     */
+    function showError(message) {
+      els.error.textContent = message;
+      els.error.classList.toggle("hidden", !message);
+    }
+
+    /**
+     * Sonuç / hata popup'ını gösterir.
+     * @param {string} title
+     * @param {string} body
+     * @param {boolean} [isError]
+     */
+    function showResultModal(title, body, isError) {
+      els.resultTitle.textContent = title;
+      els.resultBody.textContent = body;
+      els.resultTitle.classList.toggle("text-ember", Boolean(isError));
+      els.resultTitle.classList.toggle("text-gold", !isError);
+      els.resultModal.classList.remove("hidden");
+    }
+
+    function hideResultModal() {
+      els.resultModal.classList.add("hidden");
+    }
+
+    /**
+     * Masaüstü varsayılan kayıt klasörünü yükler.
+     */
+    async function initSaveDir() {
+      try {
+        if (window.pywebview?.api?.get_desktop_path) {
+          const path = await window.pywebview.api.get_desktop_path();
+          if (path) {
+            els.saveDir.value = path;
+            return;
+          }
+        }
+      } catch (_err) {
+        /* API henüz hazır olmayabilir */
+      }
+      try {
+        const response = await fetch("/api/defaults");
+        const data = await response.json();
+        if (data.ok && data.save_dir) {
+          els.saveDir.value = data.save_dir;
+        }
+      } catch (_err) {
+        els.saveDir.value = "";
+      }
+    }
+
+    /**
+     * Klasör seçiciyi açar (pywebview).
+     */
+    async function browseSaveDir() {
+      try {
+        if (window.pywebview?.api?.select_folder) {
+          const path = await window.pywebview.api.select_folder();
+          if (path) els.saveDir.value = path;
+          return;
+        }
+      } catch (_err) {
+        /* fall through */
+      }
+      showResultModal(
+        "Klasör seçilemedi",
+        "Klasör seçici yalnızca Atamation masaüstü uygulamasında çalışır.",
+        true
+      );
+    }
+
+    /**
+     * Overlay yüzde çubuğunu ve durum metnini günceller.
+     * @param {number} percent
+     * @param {string} phase
+     */
+    function setProgress(percent, phase) {
+      const value = Math.max(0, Math.min(100, Math.round(Number(percent) || 0)));
+      els.processPercent.textContent = `${value}%`;
+      els.processBar.style.width = `${value}%`;
+      const text = phase || "İşleniyor…";
+      els.processCopy.textContent = text;
+      if (els.downloadStatus) els.downloadStatus.textContent = text;
+      const lower = text.toLocaleLowerCase("tr");
+      if (lower.includes("indir")) {
+        els.processTitle.textContent = "İndiriliyor";
+      } else if (lower.includes("kes") || lower.includes("işlen") || lower.includes("hazırlan")) {
+        els.processTitle.textContent = "İşleniyor";
+      } else if (lower.includes("kaydet") || lower.includes("hazır")) {
+        els.processTitle.textContent = "Kaydediliyor";
+      } else {
+        els.processTitle.textContent = "İşleniyor";
+      }
+    }
+
+    /**
+     * YouTube oynatıcısının kullanıma hazır olup olmadığını kontrol eder.
+     * @returns {boolean}
+     */
+    function playerReady() {
+      return Boolean(state.previewSupported && ytPlayer && typeof ytPlayer.seekTo === "function");
+    }
+
+    /**
+     * Önizlemeyi verilen saniyeye götürür ve karede duraklatır.
+     * @param {number} seconds
+     */
+    function seekPreview(seconds) {
+      if (!state.previewSupported || !playerReady()) return;
+      try {
+        ytPlayer.seekTo(seconds, true);
+        if (typeof ytPlayer.pauseVideo === "function" && !state.rangePlaying) {
+          ytPlayer.pauseVideo();
+        }
+      } catch (_err) {
+        /* Oynatıcı henüz seek kabul etmiyor olabilir. */
+      }
+    }
+
+    /**
+     * Sürükleme sırasında YouTube API'yi boğmamak için seek'i geciktirir.
+     * @param {number} seconds
+     */
+    function schedulePreviewSeek(seconds) {
+      if (!state.previewSupported) return;
+      window.clearTimeout(seekTimer);
+      seekTimer = window.setTimeout(() => seekPreview(seconds), 70);
+    }
+
+    /**
+     * Masaüstü WebView2 içinde kırılan canlı önizlemeyi kapak görseline düşürür.
+     * @param {string} [message]
+     */
+    function showThumbnailOnlyPreview(message) {
+      state.rangePlaying = false;
+      state.previewSupported = false;
+      window.clearInterval(rangeTimer);
+      window.clearTimeout(seekTimer);
+      if (ytPlayer && typeof ytPlayer.destroy === "function") {
+        try {
+          ytPlayer.destroy();
+        } catch (_err) {
+          /* ignore */
+        }
+      }
+      ytPlayer = null;
+      ensureYtHost();
+      els.thumb.classList.remove("opacity-40", "opacity-0");
+      els.previewControls.classList.add("hidden");
+      els.previewBadge.textContent = "Thumbnail only";
+      els.previewFallback.classList.remove("hidden");
+      els.previewFallbackCopy.textContent =
+        message ||
+        "Live preview is unavailable in the desktop window. Set IN / OUT on the timeline and export as usual.";
+    }
+
+    /**
+     * YouTube IFrame API'nin değiştirdiği #yt-host düğümünü sıfırdan kurar.
+     * @returns {HTMLElement}
+     */
+    function ensureYtHost() {
+      const stage = els.previewStage || els.thumb.parentElement;
+      const existing = document.getElementById("yt-host");
+      if (existing) existing.remove();
+      const host = document.createElement("div");
+      host.id = "yt-host";
+      host.className = "absolute inset-0";
+      if (els.thumb && els.thumb.parentElement === stage) {
+        els.thumb.insertAdjacentElement("afterend", host);
+      } else {
+        stage.appendChild(host);
+      }
+      els.ytHost = host;
+      return host;
+    }
+
+    /**
+     * Canlı önizlemeyi kapatır ve boş host bırakır.
+     */
+    function destroyPreviewPlayer() {
+      state.rangePlaying = false;
+      window.clearInterval(rangeTimer);
+      window.clearTimeout(seekTimer);
+      if (ytPlayer && typeof ytPlayer.destroy === "function") {
+        try {
+          ytPlayer.destroy();
+        } catch (_err) {
+          /* ignore */
+        }
+      }
+      ytPlayer = null;
+      ensureYtHost();
+    }
+
+    /**
+     * Analiz edilen video için IFrame oynatıcısını kurar (WebView2 uyumlu).
+     * @param {string} videoId
+     */
+    function loadPreviewPlayer(videoId) {
+      if (!state.previewSupported || !videoId) return;
+
+      if (typeof YT === "undefined" || !YT.Player) {
+        window.setTimeout(() => {
+          if (!state.previewSupported || state.videoId !== videoId) return;
+          if (typeof YT !== "undefined" && YT.Player) {
+            loadPreviewPlayer(videoId);
+          } else {
+            showThumbnailOnlyPreview(
+              "YouTube preview API did not load. Timeline trimming still works."
+            );
+          }
+        }, 2800);
+        return;
+      }
+
+      destroyPreviewPlayer();
+      state.previewSupported = true;
+      ensureYtHost();
+
+      try {
+        ytPlayer = new YT.Player("yt-host", {
+          videoId,
+          width: "100%",
+          height: "100%",
+          host: "https://www.youtube-nocookie.com",
+          playerVars: {
+            autoplay: 0,
+            controls: 1,
+            rel: 0,
+            modestbranding: 1,
+            playsinline: 1,
+            enablejsapi: 1,
+            fs: 0,
+          },
+          events: {
+            onReady() {
+              els.thumb.classList.add("opacity-40");
+              els.previewFallback.classList.add("hidden");
+              els.previewControls.classList.remove("hidden");
+              els.previewBadge.textContent = "Live preview";
+              seekPreview(state.start);
+            },
+            onError() {
+              showThumbnailOnlyPreview(
+                "YouTube blocked the embedded player here. Use the timeline; export still works."
+              );
+            },
+          },
+        });
+      } catch (_err) {
+        showThumbnailOnlyPreview(
+          "Could not start the embedded player. Timeline trimming still works."
+        );
+      }
+    }
+
+    /**
+     * Seçilen IN-OUT aralığını önizlemede oynatır.
+     */
+    function playSelectedRange() {
+      if (!state.previewSupported || !playerReady()) return;
+      state.rangePlaying = true;
+      ytPlayer.seekTo(state.start, true);
+      ytPlayer.playVideo();
+      window.clearInterval(rangeTimer);
+      rangeTimer = window.setInterval(() => {
+        if (!playerReady() || !state.rangePlaying) return;
+        const current = ytPlayer.getCurrentTime();
+        state.previewTime = current;
+        renderTimeline();
+        if (current >= state.end - 0.08) {
+          state.rangePlaying = false;
+          ytPlayer.pauseVideo();
+          seekPreview(state.start);
+          state.previewTime = state.start;
+          renderTimeline();
+          window.clearInterval(rangeTimer);
+        }
+      }, 120);
+    }
+
+    /**
+     * Zaman çizelgesi yüzdesini saniyeye çevirir.
+     * @param {number} ratio
+     * @returns {number}
+     */
+    function ratioToTime(ratio) {
+      return Math.min(state.duration, Math.max(0, ratio * state.duration));
+    }
+
+    /**
+     * Çift saplı zaman çizelgesini ve zaman kodlarını senkronlar.
+     */
+    function renderTimeline() {
+      if (!state.timelineEnabled || !state.duration) return;
+      const startPct = (state.start / state.duration) * 100;
+      const endPct = (state.end / state.duration) * 100;
+      els.selection.style.left = `${startPct}%`;
+      els.selection.style.width = `${Math.max(0, endPct - startPct)}%`;
+      els.handleStart.style.left = `${startPct}%`;
+      els.handleEnd.style.left = `${endPct}%`;
+      const head = Number.isFinite(state.previewTime) ? state.previewTime : state.start;
+      els.playhead.style.left = `${(head / state.duration) * 100}%`;
+
+      const inCode = formatTimecode(state.start);
+      const outCode = formatTimecode(state.end);
+      const durCode = formatTimecode(state.end - state.start);
+      els.inDisplay.textContent = inCode;
+      els.outDisplay.textContent = outCode;
+      els.clipDisplay.textContent = durCode;
+      if (document.activeElement !== els.startInput) els.startInput.value = inCode;
+      if (document.activeElement !== els.endInput) els.endInput.value = outCode;
+
+      const full = Math.abs(state.start) < 0.05 && state.duration - state.end < 0.25;
+      els.exportHint.textContent = full
+        ? "Full duration selected — the complete file will be exported."
+        : `Exporting ${durCode} from ${inCode} to ${outCode}.`;
+    }
+
+    /**
+     * Premiere tarzı cetvel ve kare işaretlerini çizer.
+     */
+    function buildRuler() {
+      els.ruler.innerHTML = "";
+      els.ticks.innerHTML = "";
+      const marks = 8;
+      for (let i = 0; i <= marks; i += 1) {
+        const pct = (i / marks) * 100;
+        const label = document.createElement("span");
+        label.className = "absolute -translate-x-1/2";
+        label.style.left = `${pct}%`;
+        if (i === 0) {
+          label.className = "absolute";
+          label.style.left = "0";
+        }
+        if (i === marks) {
+          label.className = "absolute -translate-x-full";
+          label.style.left = "100%";
+        }
+        label.textContent = formatTimecode((state.duration * i) / marks);
+        els.ruler.appendChild(label);
+
+        const tick = document.createElement("div");
+        tick.className = "tick";
+        tick.style.left = `${pct}%`;
+        tick.style.height = i % 2 === 0 ? "100%" : "55%";
+        els.ticks.appendChild(tick);
+      }
+    }
+
+    /**
+     * İşaretçi konumundan 0-1 aralığında oran üretir.
+     * @param {PointerEvent} event
+     * @returns {number}
+     */
+    function pointerRatio(event) {
+      const rect = els.timeline.getBoundingClientRect();
+      return Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
+    }
+
+    /**
+     * Sürüklenen sapı günceller; sapların çapraz geçmesini engeller.
+     * @param {number} time
+     */
+    function applyDrag(time) {
+      const minGap = Math.min(0.4, state.duration);
+      if (state.dragging === "start") {
+        state.start = Math.min(time, state.end - minGap);
+        state.start = Math.max(0, state.start);
+      } else if (state.dragging === "end") {
+        state.end = Math.max(time, state.start + minGap);
+        state.end = Math.min(state.duration, state.end);
+      }
+      state.previewTime = state.dragging === "end" ? state.end : state.start;
+      renderTimeline();
+      schedulePreviewSeek(state.previewTime);
+    }
+
+    els.handleStart.addEventListener("pointerdown", (event) => {
+      event.stopPropagation();
+      state.dragging = "start";
+      els.handleStart.setPointerCapture(event.pointerId);
+    });
+    els.handleEnd.addEventListener("pointerdown", (event) => {
+      event.stopPropagation();
+      state.dragging = "end";
+      els.handleEnd.setPointerCapture(event.pointerId);
+    });
+    els.timeline.addEventListener("pointerdown", (event) => {
+      if (event.target === els.handleStart || event.target === els.handleEnd) return;
+      const time = ratioToTime(pointerRatio(event));
+      const distStart = Math.abs(time - state.start);
+      const distEnd = Math.abs(time - state.end);
+      state.dragging = distStart <= distEnd ? "start" : "end";
+      applyDrag(time);
+    });
+    window.addEventListener("pointermove", (event) => {
+      if (!state.dragging) return;
+      applyDrag(ratioToTime(pointerRatio(event)));
+    });
+    window.addEventListener("pointerup", () => {
+      state.dragging = null;
+    });
+
+    /**
+     * IN kutusundaki zaman kodunu state'e yazar.
+     */
+    function applyStartInput() {
+      const parsed = parseTimecode(els.startInput.value);
+      if (parsed === null) {
+        renderTimeline();
+        return;
+      }
+      state.start = Math.max(0, Math.min(parsed, state.end - 0.4));
+      state.previewTime = state.start;
+      renderTimeline();
+      seekPreview(state.start);
+    }
+
+    /**
+     * OUT kutusundaki zaman kodunu state'e yazar.
+     */
+    function applyEndInput() {
+      const parsed = parseTimecode(els.endInput.value);
+      if (parsed === null) {
+        renderTimeline();
+        return;
+      }
+      state.end = Math.min(state.duration, Math.max(parsed, state.start + 0.4));
+      state.previewTime = state.end;
+      renderTimeline();
+      seekPreview(state.end);
+    }
+
+    /**
+     * İş tamamlanana kadar yüzde endpoint'ini yoklar.
+     * @param {string} jobId
+     * @returns {Promise<object>}
+     */
+    async function waitForJob(jobId) {
+      while (true) {
+        const response = await fetch(`/api/jobs/${jobId}`);
+        const data = await response.json();
+        if (!response.ok || data.ok === false) {
+          throw new Error(data.error || "Could not read export progress.");
+        }
+        setProgress(data.percent, data.phase || "Working");
+        if (data.status === "ready") return data;
+        if (data.status === "error") {
+          throw new Error(data.error || "Export failed.");
+        }
+        await new Promise((resolve) => setTimeout(resolve, 400));
+      }
+    }
+
+    els.startInput.addEventListener("change", applyStartInput);
+    els.startInput.addEventListener("blur", applyStartInput);
+    els.endInput.addEventListener("change", applyEndInput);
+    els.endInput.addEventListener("blur", applyEndInput);
+
+    els.mediaType.addEventListener("change", () => {
+      const isVideo = els.mediaType.value === "mp4";
+      els.qualityWrap.classList.toggle("hidden", !isVideo);
+    });
+    els.previewIn.addEventListener("click", () => {
+      if (!state.previewSupported) return;
+      state.rangePlaying = false;
+      state.previewTime = state.start;
+      renderTimeline();
+      seekPreview(state.start);
+    });
+    els.previewOut.addEventListener("click", () => {
+      if (!state.previewSupported) return;
+      state.rangePlaying = false;
+      state.previewTime = state.end;
+      renderTimeline();
+      seekPreview(state.end);
+    });
+    els.previewPlay.addEventListener("click", () => {
+      if (!state.previewSupported) return;
+      playSelectedRange();
+    });
+
+    /**
+     * Analiz sonucunu editör paneline basar.
+     * @param {object} data
+     */
+    function hydrateEditor(data) {
+      state.url = data.url;
+      state.title = data.title;
+      state.timelineEnabled = Boolean(data.timeline_enabled) && data.duration != null;
+      state.duration = state.timelineEnabled ? Number(data.duration) : 0;
+      state.start = 0;
+      state.end = state.duration;
+      state.thumbnail = data.thumbnail || "";
+      state.videoId = data.id || "";
+      state.platform = data.platform || "unknown";
+      state.previewSupported = Boolean(data.preview_supported) && state.timelineEnabled;
+      state.previewTime = 0;
+      state.rangePlaying = false;
+
+      els.title.textContent = data.title;
+      els.uploader.textContent = data.uploader || state.platform;
+      els.fullDuration.textContent = state.timelineEnabled
+        ? formatTimecode(state.duration)
+        : "Unknown · full file";
+      els.platformLabel.textContent = String(state.platform).toUpperCase();
+      els.thumb.src = state.thumbnail;
+      els.thumb.classList.remove("opacity-0");
+      els.thumb.classList.toggle("opacity-40", state.previewSupported);
+      els.filmstrip.style.backgroundImage = state.thumbnail ? `url("${state.thumbnail}")` : "none";
+
+      els.timelineSection.classList.toggle("hidden", !state.timelineEnabled);
+      els.timelineNotice.classList.toggle("hidden", state.timelineEnabled);
+      els.downloadLabel.textContent = state.timelineEnabled
+        ? "Download Selected Range"
+        : "Download Full File";
+      els.exportHint.textContent = state.timelineEnabled
+        ? "Ready to render the selected range."
+        : "Duration unavailable — the complete file will be downloaded (no trim).";
+
+      destroyPreviewPlayer();
+      if (state.previewSupported) {
+        els.previewFallback.classList.add("hidden");
+        els.previewControls.classList.remove("hidden");
+        els.previewBadge.textContent = "Live preview";
+        els.previewBadge.classList.remove("hidden");
+        loadPreviewPlayer(state.videoId);
+      } else {
+        els.thumb.classList.remove("opacity-40");
+        els.previewFallback.classList.remove("hidden");
+        els.previewControls.classList.add("hidden");
+        els.previewBadge.textContent = state.timelineEnabled ? "Thumbnail only" : "Full file mode";
+        els.previewFallbackCopy.textContent = state.timelineEnabled
+          ? `${String(state.platform).toUpperCase()} preview is bypassed. Set IN / OUT on the timeline and export as usual.`
+          : "No readable duration. Timeline is closed — export downloads the full media file.";
+      }
+
+      els.quality.innerHTML = "";
+      const qualities = Array.isArray(data.qualities) && data.qualities.length
+        ? data.qualities
+        : [1080, 720, 480];
+      qualities.forEach((height, index) => {
+        const option = document.createElement("option");
+        option.value = String(height);
+        option.textContent = `${height}p`;
+        if (index === 0) option.selected = true;
+        els.quality.appendChild(option);
+      });
+
+      if (!data.has_audio) {
+        const mp3 = els.mediaType.querySelector('option[value="mp3"]');
+        if (mp3) mp3.disabled = true;
+        els.mediaType.value = "mp4";
+      } else {
+        els.mediaType.querySelectorAll("option").forEach((opt) => { opt.disabled = false; });
+      }
+      els.qualityWrap.classList.toggle("hidden", els.mediaType.value !== "mp4");
+
+      if (state.timelineEnabled) {
+        buildRuler();
+        renderTimeline();
+      }
+      els.editor.classList.remove("hidden");
+    }
+
+    els.form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      showError("");
+      els.analyzeBtn.disabled = true;
+      els.analyzeLabel.textContent = "Reading";
+      els.analyzeSpinner.classList.remove("hidden");
+
+      try {
+        const response = await fetch("/api/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: els.url.value.trim() }),
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) {
+          throw new Error(data.error || "Could not analyze this link.");
+        }
+        hydrateEditor(data);
+      } catch (err) {
+        showError(err.message || "Could not analyze this link.");
+        els.editor.classList.add("hidden");
+      } finally {
+        els.analyzeBtn.disabled = false;
+        els.analyzeLabel.textContent = "Analyze";
+        els.analyzeSpinner.classList.add("hidden");
+      }
+    });
+
+    els.resultOk.addEventListener("click", hideResultModal);
+    els.browseDir.addEventListener("click", () => {
+      browseSaveDir();
+    });
+
+    els.downloadBtn.addEventListener("click", async () => {
+      if (!state.url) return;
+      applyStartInput();
+      applyEndInput();
+      showError("");
+      hideResultModal();
+
+      const saveDirectory = (els.saveDir.value || "").trim();
+      if (!saveDirectory) {
+        showResultModal(
+          "Kayıt klasörü yok",
+          "Lütfen önce bir kayıt klasörü seçin (varsayılan: Masaüstü).",
+          true
+        );
+        return;
+      }
+
+      els.downloadBtn.disabled = true;
+      els.downloadLabel.textContent = "İndiriliyor…";
+      els.downloadSpinner.classList.remove("hidden");
+      els.overlay.classList.remove("hidden");
+      setProgress(1, "Başlatılıyor…");
+
+      try {
+        const created = await fetch("/api/jobs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            url: state.url,
+            start: state.timelineEnabled ? state.start : 0,
+            end: state.timelineEnabled ? state.end : 0,
+            duration: state.timelineEnabled ? state.duration : null,
+            media_type: els.mediaType.value,
+            quality: els.quality.value,
+          }),
+        });
+        const createdData = await created.json();
+        if (!created.ok || !createdData.id) {
+          throw new Error(createdData.error || "Dışa aktarma başlatılamadı.");
+        }
+
+        await waitForJob(createdData.id);
+        setProgress(98, "Dosya kaydediliyor…");
+
+        const saveResponse = await fetch(`/api/jobs/${createdData.id}/save`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ directory: saveDirectory }),
+        });
+        const saveData = await saveResponse.json();
+        if (!saveResponse.ok || !saveData.ok) {
+          throw new Error(saveData.error || "Dosya kaydedilemedi.");
+        }
+
+        setProgress(100, "Tamamlandı");
+        els.downloadStatus.textContent = `Kaydedildi: ${saveData.path}`;
+        showResultModal(
+          "İndirme tamamlandı",
+          `Dosya kaydedildi:\n${saveData.path}`
+        );
+      } catch (err) {
+        const message = err.message || "İndirme başarısız oldu.";
+        showError(message);
+        els.downloadStatus.textContent = message;
+        showResultModal("İndirme hatası", message, true);
+      } finally {
+        els.downloadBtn.disabled = false;
+        els.downloadLabel.textContent = state.timelineEnabled
+          ? "Download Selected Range"
+          : "Download Full File";
+        els.downloadSpinner.classList.add("hidden");
+        els.overlay.classList.add("hidden");
+        setProgress(0, "İndirme başlatılıyor…");
+      }
+    });
+
+    window.addEventListener("pywebviewready", () => {
+      initSaveDir();
+    });
+    initSaveDir();
+  </script>
+  <script src="{{ url_for('static', filename='js/window-chrome.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/runner-game.js') }}"></script>
+</body>
+</html>

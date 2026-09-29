@@ -1,0 +1,32 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+*.egg-info/
+
+# Build artifacts & binaries (do not publish)
+build/
+dist/
+*.exe
+*.spec.bak
+
+# Vendor / bundled tools (keep local if present)
+vendor/
+
+# Logs & OS / IDE
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Local notes (not for end users)
+1.1-Notlar.txt
+*-Notlar.txt
+
+# Docker local overrides
+.env
+.env.local
