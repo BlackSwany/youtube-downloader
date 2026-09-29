@@ -22,7 +22,7 @@ Flask tabanlı web arayüzü + masaüstü (PyInstaller) paketi. Motor: `yt-dlp` 
 ## Kurulum (kaynak kod)
 
 ```bash
-git clone https://github.com/BlackSwany/youtube-downloader.git
+git clone https://github.com/Atamations/youtube-downloader.git
 cd youtube-downloader
 python -m venv .venv
 .venv\Scripts\activate
